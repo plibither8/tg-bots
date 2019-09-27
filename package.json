@@ -1,0 +1,7 @@
+{
+	"private": true,
+	"dependencies": {
+		"fastify": "^2.8.0",
+		"node-fetch": "^2.6.0"
+	}
+}
