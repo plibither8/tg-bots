@@ -19,7 +19,7 @@ fastify.post('/:botName', async (req, reply) => {
 		chat_id: CHAT_ID,
 		parse_mode: 'Markdown',
 		disable_web_page_preview: true,
-		...JSON.parse(req.body)
+		...req.body
 	}
 
 	await fetch(API_URL, {
@@ -29,6 +29,8 @@ fastify.post('/:botName', async (req, reply) => {
 			'Content-Type': 'application/json'
 		}
 	})
+
+	reply.send('message sent!')
 })
 
 fastify.listen(process.env.PORT || 3000, err => {
