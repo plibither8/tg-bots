@@ -4,6 +4,12 @@ const fetch = require('node-fetch')
 const { CHAT_ID } = process.env
 
 fastify.post('/:botName', async (req, reply) => {
+	if (!req.body.secret || req.body.secret !== process.env.SECRET_STRING) {
+		reply
+			.code(403)
+			.send('Secrets did not match or not provided.')
+	}
+
 	const { botName } = req.params
 
 	const BOT_KEY = process.env[botName.toUpperCase()]
@@ -30,7 +36,7 @@ fastify.post('/:botName', async (req, reply) => {
 		}
 	})
 
-	reply.send('message sent!')
+	reply.send('Message sent!')
 })
 
 fastify.listen(process.env.PORT || 3000, err => {
