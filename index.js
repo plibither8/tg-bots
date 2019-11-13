@@ -7,12 +7,17 @@ fastify.post('/:botName', async (req, reply) => {
 	if (!req.body.secret || req.body.secret !== process.env.SECRET_STRING) {
 		reply
 			.code(403)
-			.send('Secrets did not match or not provided.')
+			.send('Secret not provided or did not match.')
 	}
 
 	const { botName } = req.params
 
-	const BOT_KEY = process.env[botName.toUpperCase()]
+	const botList = await fetch(`https://api.github.com/gists/${process.env.GIST_ID}`)
+		.then(res => res.json())
+		.then(data => data.files["tg-bots.json"].content)
+		.then(content => JSON.parse(content))
+
+	const BOT_KEY = botList[botName]
 	if (!BOT_KEY) {
 		reply
 			.code(400)

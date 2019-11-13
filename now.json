@@ -4,8 +4,7 @@
 	"env": {
 		"SECRET_STRING": "@tg-bots-secret-string",
 		"CHAT_ID": "@tg-chat-id",
-		"P8_ANALYTICS_BOT": "@bot-p8-analytics",
-		"LITTLE_WINS_BOT": "@bot-little-wins"
+		"GIST_ID": "@tg-bots-gist"
 	},
 	"github": {
 		"enabled": true,
