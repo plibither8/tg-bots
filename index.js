@@ -30,7 +30,6 @@ fastify.post('/:botName', async (req, reply) => {
 		chat_id: CHAT_ID,
 		parse_mode: 'Markdown',
 		disable_web_page_preview: true,
-		reply_markup: JSON.stringify({ hide_keyboard: true }),
 		...req.body
 	}
 
