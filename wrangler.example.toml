@@ -1,0 +1,7 @@
+name = "tg-bots"
+main = "src/index.ts"
+compatibility_date = "2022-08-09"
+
+[vars]
+CHAT_ID = ""
+SECRET_STRING = ""
