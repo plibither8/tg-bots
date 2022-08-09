@@ -47,6 +47,12 @@ router.post("*", async (request: Request, env: Env) => {
   }
 });
 
+router.all("*", () => {
+  return new Response(
+    "Thanks for dropping by! Visit https://github.com/plibither8/tg-bots for more info ;)"
+  );
+});
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     return router.handle(request, env);
