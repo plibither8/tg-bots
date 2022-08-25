@@ -1,27 +1,48 @@
 import { Router } from "itty-router";
-import BOTS from "./bots";
 
 interface Env {
   CHAT_ID: string;
   SECRET_STRING: string;
+  BOTS: KVNamespace;
 }
 
 const router = Router();
 
+const authMiddleware = async (request: Request, env: Env) => {
+  const body: Record<string, any> = (await request.json()) || {};
+  if (body.secret !== env.SECRET_STRING)
+    return new Response("Unauthorized", { status: 401 });
+};
+
+router.get(
+  "/:botName/:botKey",
+  authMiddleware,
+  async (
+    request: Request & {
+      params: {
+        botName: string;
+        botKey: string;
+      };
+    },
+    env: Env
+  ) => {
+    const { botName, botKey } = request.params;
+    await env.BOTS.put(botName, botKey);
+    return new Response("New bot entry set");
+  }
+);
+
 router.post(
   "/:botName",
+  authMiddleware,
   async (
     request: Request & {
       params: { botName: string };
     },
     env: Env
   ) => {
-    const body: Record<string, any> = (await request.json()) || {};
-    if (body.secret !== env.SECRET_STRING)
-      return new Response("Unauthorized", { status: 401 });
-
     const { botName } = request.params;
-    const botKey = BOTS[botName];
+    const botKey = await env.BOTS.get(botName);
     if (!botKey) return new Response("Bot not found", { status: 404 });
 
     try {
