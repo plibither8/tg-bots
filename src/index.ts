@@ -14,7 +14,7 @@ const authMiddleware = async (request: Request, env: Env) => {
     return new Response("Unauthorized", { status: 401 });
 };
 
-router.get(
+router.post(
   "/:botName/:botKey",
   authMiddleware,
   async (
@@ -41,6 +41,7 @@ router.post(
     },
     env: Env
   ) => {
+    const body: Record<string, any> = (await request.json()) || {};
     const { botName } = request.params;
     const botKey = await env.BOTS.get(botName);
     if (!botKey) return new Response("Bot not found", { status: 404 });
