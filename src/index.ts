@@ -15,16 +15,14 @@ const authMiddleware: Handler<string, Env> = async (ctx, next) => {
   next();
 };
 
-app.post("/:botName/:botKey", authMiddleware);
-app.post("/:botName/:botKey", async (ctx) => {
+app.post("/:botName/:botKey", authMiddleware, async (ctx) => {
   const botName = ctx.req.param("botName");
   const botKey = ctx.req.param("botKey");
   await ctx.env.BOTS.put(botName, botKey);
   return ctx.text("New bot entry set");
 });
 
-app.post("/:botName", authMiddleware);
-app.post("/:botName", async (ctx) => {
+app.post("/:botName", authMiddleware, async (ctx) => {
   const botName = ctx.req.param("botName");
   const botKey = await ctx.env.BOTS.get(botName);
   if (!botKey) return ctx.text("Bot not found", 404);
