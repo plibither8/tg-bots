@@ -1,4 +1,4 @@
-import { Hono, type Context } from "hono";
+import { Hono, type Handler } from "hono";
 
 interface Env {
   CHAT_ID: string;
@@ -8,10 +8,11 @@ interface Env {
 
 const app = new Hono<Env>();
 
-const authMiddleware = async (ctx: Context<string, Env>) => {
+const authMiddleware: Handler<string, Env> = async (ctx, next) => {
   const body = await ctx.req.json<{ secret: string }>();
   if (body.secret !== ctx.env.SECRET_STRING)
     return ctx.text("Unauthorized", 401);
+  next();
 };
 
 app.post("/:botName/:botKey", authMiddleware);
