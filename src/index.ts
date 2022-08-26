@@ -1,4 +1,4 @@
-import { Router } from "itty-router";
+import { Hono, type Context } from "hono";
 
 interface Env {
   CHAT_ID: string;
@@ -6,84 +6,59 @@ interface Env {
   BOTS: KVNamespace;
 }
 
-const router = Router();
+const app = new Hono<Env>();
 
-const authMiddleware = async (request: Request, env: Env) => {
-  const body: Record<string, any> = (await request.json()) || {};
-  if (body.secret !== env.SECRET_STRING)
-    return new Response("Unauthorized", { status: 401 });
+const authMiddleware = async (ctx: Context<string, Env>) => {
+  const body = await ctx.req.json<{ secret: string }>();
+  if (body.secret !== ctx.env.SECRET_STRING)
+    return ctx.text("Unauthorized", 401);
 };
 
-router.post(
-  "/:botName/:botKey",
-  authMiddleware,
-  async (
-    request: Request & {
-      params: {
-        botName: string;
-        botKey: string;
-      };
-    },
-    env: Env
-  ) => {
-    const { botName, botKey } = request.params;
-    await env.BOTS.put(botName, botKey);
-    return new Response("New bot entry set");
-  }
-);
-
-router.post(
-  "/:botName",
-  authMiddleware,
-  async (
-    request: Request & {
-      params: { botName: string };
-    },
-    env: Env
-  ) => {
-    const body: Record<string, any> = (await request.json()) || {};
-    const { botName } = request.params;
-    const botKey = await env.BOTS.get(botName);
-    if (!botKey) return new Response("Bot not found", { status: 404 });
-
-    try {
-      const res = await fetch(
-        `https://api.telegram.org/bot${botKey}/sendMessage`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            chat_id: env.CHAT_ID,
-            parse_mode: "Markdown",
-            disable_web_page_preview: true,
-            ...body,
-          }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const json = await res.json<{
-        ok: boolean;
-        description: string;
-      }>();
-      if (json.ok) return new Response("Successfully sent message");
-      return new Response(`Error sending message: ${json.description}`, {
-        status: 500,
-      });
-    } catch (err) {
-      return new Response(`Error sending message: ${err}`, { status: 500 });
-    }
-  }
-);
-
-router.all("*", () => {
-  return new Response(
-    "Thanks for dropping by! Visit https://github.com/plibither8/tg-bots for more info ;)"
-  );
+app.post("/:botName/:botKey", authMiddleware);
+app.post("/:botName/:botKey", async (ctx) => {
+  const botName = ctx.req.param("botName");
+  const botKey = ctx.req.param("botKey");
+  await ctx.env.BOTS.put(botName, botKey);
+  return ctx.text("New bot entry set");
 });
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    return router.handle(request, env);
-  },
-};
+app.post("/:botName", authMiddleware);
+app.post("/:botName", async (ctx) => {
+  const botName = ctx.req.param("botName");
+  const botKey = await ctx.env.BOTS.get(botName);
+  if (!botKey) return ctx.text("Bot not found", 404);
+  try {
+    const body = await ctx.req.json<Record<string, any>>();
+    const res = await fetch(
+      `https://api.telegram.org/bot${botKey}/sendMessage`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          chat_id: ctx.env.CHAT_ID,
+          parse_mode: "Markdown",
+          disable_web_page_preview: true,
+          ...body,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const json = await res.json<{
+      ok: boolean;
+      description: string;
+    }>();
+    if (json.ok) return ctx.text("Successfully sent message");
+    return ctx.text(`Error sending message: ${json.description}`, 500);
+  } catch (err) {
+    return ctx.text(`Error sending message: ${err}`, 500);
+  }
+});
+
+app.all("*", (ctx) =>
+  ctx.text(
+    "Thanks for dropping by! Visit https://github.com/plibither8/tg-bots for more info ;)"
+  )
+);
+
+export default app;
