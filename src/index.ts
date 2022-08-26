@@ -12,7 +12,7 @@ const authMiddleware: Handler<string, Env> = async (ctx, next) => {
   const body = await ctx.req.json<{ secret: string }>();
   if (body.secret !== ctx.env.SECRET_STRING)
     return ctx.text("Unauthorized", 401);
-  next();
+  await next();
 };
 
 app.post("/:botName/:botKey", authMiddleware, async (ctx) => {
