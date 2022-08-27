@@ -9,7 +9,7 @@ interface Env {
 const app = new Hono<Env>();
 
 const authMiddleware: Handler<string, Env> = async (ctx, next) => {
-  const body = await ctx.req.json<{ secret: string }>();
+  const body = (await ctx.req.parseBody()) as { secret?: string };
   if (body.secret !== ctx.env.SECRET_STRING)
     return ctx.text("Unauthorized", 401);
   await next();
@@ -26,7 +26,7 @@ app.post("/:botName", authMiddleware, async (ctx) => {
   const botKey = await ctx.env.BOTS.get(botName);
   if (!botKey) return ctx.text("Bot not found", 404);
   try {
-    const body = await ctx.req.json<Record<string, any>>();
+    const body = (await ctx.req.parsedBody) as Record<string, any>;
     const res = await fetch(
       `https://api.telegram.org/bot${botKey}/sendMessage`,
       {
